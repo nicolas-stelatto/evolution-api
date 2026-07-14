@@ -51,7 +51,14 @@ export abstract class RouterBroker {
     }
 
     if (request.originalUrl.includes('/instance/create')) {
-      Object.assign(instance, sanitizeUntrustedInput(body));
+      // Fix (serena-build): o create PRECISA do instanceName do body — a sanitização o descartava,
+      // quebrando toda criação de instância ("Argument `name` is missing" + FK violation em Setting).
+      // instanceId segue protegido (o controller gera o próprio via uuid).
+      const sanitizedBody = sanitizeUntrustedInput(body);
+      if (typeof body?.instanceName === 'string') {
+        sanitizedBody.instanceName = body.instanceName;
+      }
+      Object.assign(instance, sanitizedBody);
     }
 
     Object.assign(ref, body);
